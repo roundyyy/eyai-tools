@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EYAI Tolls</title>
+    <title>EyAi Tools</title>
     <link rel="icon" href="https://roundy-ai.streamlit.app/favicon.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap">
     <style>
         body, html {
             margin: 0;
@@ -12,6 +13,8 @@
             height: 100%;
             overflow: hidden;
             font-family: sans-serif;
+            background-color: #0E1117;
+            color: #FAFAFA;
         }
         #loading {
             position: fixed;
@@ -19,7 +22,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: #f5f5f5;
+            background: #0E1117;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -27,22 +30,65 @@
             z-index: 1000;
             transition: opacity 0.5s ease-in-out;
         }
-        #loading img {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 20px;
+        #terminal {
+            width: 80%;
+            max-width: 600px;
+            height: 400px;
+            background-color: #1A1F29;
+            border: 2px solid #4BAEFC;
+            border-radius: 5px;
+            padding: 20px;
+            font-family: 'VT323', monospace;
+            font-size: 22px;
+            color: #FAFAFA;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 0 20px rgba(75, 174, 252, 0.3);
         }
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border-left-color: #3498db;
-            animation: spin 1s linear infinite;
+        #terminal-content {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: calc(100% - 40px);
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .terminal-line {
+            margin: 0;
+            height: 26px;
+            line-height: 26px;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .terminal-line.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .blinking-cursor {
+            display: inline-block;
+            width: 12px;
+            height: 24px;
+            background-color: #4BAEFC;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+        .loading-dots {
+            display: inline-block;
+        }
+        .loading-dots:after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        @keyframes dots {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+            100% { content: '.'; }
         }
         iframe {
             width: 100%;
@@ -56,26 +102,42 @@
 </head>
 <body>
     <div id="loading">
-        <img src="https://roundy-ai.streamlit.app/favicon.png" alt="Logo">
-        <div class="spinner"></div>
-        <p>Loading EYAI Tools...</p>
+        <div id="terminal">
+            <div id="terminal-content">
+                <p class="terminal-line" id="line1">C:\> EYAI_TOOLS.EXE<span class="blinking-cursor"></span></p>
+                <p class="terminal-line" id="line2">INITIALIZING PARAMETERS<span class="loading-dots"></span></p>
+                <p class="terminal-line" id="line3">PLEASE WAIT<span class="loading-dots"></span></p>
+                <p class="terminal-line" id="line4">BUFFERING DATA<span class="loading-dots"></span> CALIBRATING NEURAL NETWORK<span class="loading-dots"></span></p>
+                <p class="terminal-line" id="line5">OPTIMIZING PARAMETERS<span class="loading-dots"></span></p>
+                <p class="terminal-line" id="line6">INITIALIZING SYSTEM<span class="loading-dots"></span></p>
+                <p class="terminal-line" id="line7">LOADING MODULES<span class="loading-dots"></span></p>
+                <p class="terminal-line" id="line8">ESTABLISHING CONNECTION<span class="loading-dots"></span></p>
+                <p class="terminal-line" id="line9">LAUNCHING AI TOOLS INTERFACE<span class="loading-dots"></span></p>
+            </div>
+        </div>
     </div>
     
     <iframe id="streamlit-frame" src="about:blank" onload="hideLoader()"></iframe>
 
     <script>
-        function hideLoader() {
-            // Make sure the iframe has actually loaded content from Streamlit
-            const iframe = document.getElementById('streamlit-frame');
-            if (iframe.src !== 'about:blank') {
-                document.getElementById('loading').style.opacity = 0;
+        // Terminal animation
+        const lines = document.querySelectorAll('.terminal-line');
+        const delays = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000];
+        
+        function animateTerminal() {
+            lines.forEach((line, index) => {
                 setTimeout(() => {
-                    document.getElementById('loading').style.display = 'none';
-                }, 500);
-            }
+                    line.classList.add('visible');
+                    
+                    // If this is the last line, start loading the iframe after it appears
+                    if (index === lines.length - 1) {
+                        setTimeout(loadIframe, 1500);
+                    }
+                }, delays[index]);
+            });
         }
-
-        window.onload = function() {
+        
+        function loadIframe() {
             // Get all query parameters from URL
             const urlParams = new URLSearchParams(window.location.search);
             const page = urlParams.get('page');
@@ -122,8 +184,24 @@
                 const formattedPage = page.split('-').map(word => 
                     word.charAt(0).toUpperCase() + word.slice(1)
                 ).join(' ');
-                document.title = `${formattedPage} - EYAI Tools`;
+                document.title = `${formattedPage} - EyAi Tools`;
             }
+        }
+
+        function hideLoader() {
+            // Make sure the iframe has actually loaded content from Streamlit
+            const iframe = document.getElementById('streamlit-frame');
+            if (iframe.src !== 'about:blank') {
+                document.getElementById('loading').style.opacity = 0;
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                }, 500);
+            }
+        }
+
+        // Start animation when the page loads
+        window.onload = function() {
+            animateTerminal();
         };
     </script>
 </body>
